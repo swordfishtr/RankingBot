@@ -19,22 +19,41 @@
   - Parameters:
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
     - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
+  - Return:
+    - List of elo and ranking for all users
+      - If `month`, shows only elo/rank based on current month. If `all`, shows all time elo/rank
+      - If `unranked`, includes unranked users in ranking. If `ranked`, only shows ranked users
 - `+past_ranking`
   - Parameters:
     - `month`: Takes any two digit integer, defaults to `01`
     - `year`: Takes any four digit integer, defaults to `1970`
     - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
+  - Return:
+    - List of elo and ranking for all users from a previous month/year
+      - If `unranked`, includes unranked users in ranking. If `ranked`, only shows ranked users
 - `+show_rank`
   - Parameters:
     - `username`: Takes any showdown username
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
+  - Return:
+    - Elo of user
+      - If `all`, shows all time elo. If `month`, shows current month elo
 - `+pokemon_usage`
   - Parameters:
     - `username`: Takes any showdown username or `all`, defaults to `all`
     - `usage_type`: Takes values of `most`, `win`, or `lose`, defaults to `most`
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
+  - Return:
+    - Most common pokemon used
+      - If `all`, shows most common pokemon across all users. If specific username, shows most common pokemon for that user
+      - If `most`, shows most common pokemon in all matches. If `win`, shows most common pokemon in winning matches. If `lose`, shows most common pokemon in losing matches.
+      - If `all`, shows most common pokemon of all time. If `month`, shows most common pokemon of current month
 - `+rival`
   - Parameters:
     - `username`: Takes any showdown username
     - `rival_type`: Takes values of `most`, `win`, or `lose`, defaults to `most`
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
+  - Return:
+    - Most common user played against
+      - If `most`, shows most common rival in all matches. If `win`, shows most common rival in winning matches. If `lose`, shows most common rival in losing matches.
+      - If `all`, shows most common pokemon of all time. If `month`, shows most common pokemon of current month
