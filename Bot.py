@@ -82,5 +82,14 @@ async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month
 	await ctx.channel.send(f'{username}: {usage_text}')
 	return
 
+@bot.command(name='rival', help='Use this command to get rival')
+async def rival(ctx, username, rival_type='most', rank_type='month'):
+	if rank_type == 'all':
+		rival_text = service.get_rival(username, rival_type, RankType.ALL_TIME, None)
+	else:
+		rival_text = service.get_rival(username, rival_type, RankType.MONTH, datetime.datetime.now())
+	await ctx.channel.send(f'{username}: {rival_text}')
+	return
+
 def clean_link(message):
 	return MATCH_PREFIX + message.split(MATCH_PREFIX)[1].split('\n')[0].split(' ')[0].split('>')[0].strip()

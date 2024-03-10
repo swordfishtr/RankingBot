@@ -17,19 +17,24 @@
 ## Bot commands
 - `+ranking`
   - Parameters:
-  - `rank_type`: Takes values of `month` or `all`, defaults to `month`
-  - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
+    - `rank_type`: Takes values of `month` or `all`, defaults to `month`
+    - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
 - `+past_ranking`
   - Parameters:
-  - `month`: Takes any two digit integer, defaults to `01`
-  - `year`: Takes any four digit integer, defaults to `1970`
-  - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
+    - `month`: Takes any two digit integer, defaults to `01`
+    - `year`: Takes any four digit integer, defaults to `1970`
+    - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
 - `+show_rank`
   - Parameters:
-  - `username`: Takes any showdown username
-  - `rank_type`: Takes values of `month` or `all`, defaults to `month`
+    - `username`: Takes any showdown username
+    - `rank_type`: Takes values of `month` or `all`, defaults to `month`
 - `+pokemon_usage`
   - Parameters:
-  - `username`: Takes any showdown username or `all`, defaults to `all`
-  - `usage_type`: Takes values of `most`, `win`, or `lose`, defaults to `most`
-  - `rank_type`: Takes values of `month` or `all`, defaults to `month`
+    - `username`: Takes any showdown username or `all`, defaults to `all`
+    - `usage_type`: Takes values of `most`, `win`, or `lose`, defaults to `most`
+    - `rank_type`: Takes values of `month` or `all`, defaults to `month`
+- `+rival`
+  - Parameters:
+    - `username`: Takes any showdown username
+    - `rival_type`: Takes values of `most`, `win`, or `lose`, defaults to `most`
+    - `rank_type`: Takes values of `month` or `all`, defaults to `month`

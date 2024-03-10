@@ -20,6 +20,42 @@ class Service:
 			return match.date
 		return None
 
+	def get_rival(self, username, rival_type, rank_type, date):
+		response = session.execute(select(User).where(User.username == username.strip().lower()))
+		for user in response.scalars():
+			if user.username == username:
+				if rank_type == RankType.MONTH:
+					won_matches = [x for x in user.won_matches if x.date.month == date.month and x.date.year == date.year]
+					lost_matches = [x for x in user.lost_matches if x.date.month == date.month and x.date.year == date.year]
+				else:
+					won_matches = user.won_matches
+					lost_matches = user.lost_matches
+				if rival_type == 'most':
+					users = []
+					for match in won_matches:
+						users.append(match.loser_id)
+					for match in lost_matches:
+						users.append(match.winner_id)
+					rival_id = max(set(users), key=users.count)
+				elif rival_type == 'win':
+					users = []
+					for match in won_matches:
+						users.append(match.loser_id)
+					rival_id = max(set(users), key=users.count)
+				elif rival_type == 'lose':
+					users = []
+					for match in lost_matches:
+						users.append(match.winner_id)
+					rival_id = max(set(users), key=users.count)
+				else:
+					rival_id = None
+				rival_response = session.execute(select(User).where(User.id == rival_id))
+				for user in rival_response.scalars():
+					if user.id == rival_id:
+						return user.username
+				return 'No rival found'
+
+
 	def get_pokemon_usage(self, username, usage_type, rank_type, date):
 		response = session.execute(select(User).where(User.username == username.strip().lower()))
 		for user in response.scalars():
@@ -47,6 +83,8 @@ class Service:
 					for match in lost_matches:
 						pokemon.extend(match.losing_roster.split(','))
 					return max(set(pokemon), key=pokemon.count)
+				else:
+					return 'No pokemon found'
 
 	def get_all_pokemon_usage(self, usage_type, rank_type, date):
 		response = session.execute(select(User))
@@ -79,6 +117,8 @@ class Service:
 			for match in lost_matches:
 				pokemon.extend(match.losing_roster.split(','))
 			return max(set(pokemon), key=pokemon.count)
+		else:
+			return 'No pokemon found'
 
 	def get_user_rank(self, username, rank_type, date):
 		response = session.execute(select(User).where(User.username == username.strip().lower()))
