@@ -9,6 +9,8 @@ class Service:
 		self.__elo_floor = 100
 		self.__k_factor = 32
 		self.__rating = 400
+		self.__elo_start = 1000
+		self.__ranked_threshold = 10
 
 		self.latest_rank_update_text = {}
 
@@ -111,7 +113,7 @@ class Service:
 			total_games = len(won_matches) + len(lost_matches)
 			wins = len(won_matches)
 			losses = len(lost_matches)
-			if (total_games >= 10):
+			if (total_games >= self.__ranked_threshold):
 				output_text += f'{idx}. **{ur["user"].username}**: {round(ur["rank"])} ({total_games}/{wins}/{losses})\n'
 				idx += 1
 			elif unranked:
@@ -193,7 +195,7 @@ class Service:
 			if rank.user_id == user_id and rank.rank_type == RankType.MONTH and rank.month == date.month and rank.year == date.year:
 				return rank
 		else:
-			rank = Rank(user_id, 1000, RankType.MONTH, date.month, date.year)
+			rank = Rank(user_id, self.__elo_start, RankType.MONTH, date.month, date.year)
 			session.add(rank)
 			session.commit()
 			return rank
@@ -204,7 +206,7 @@ class Service:
 			if rank.user_id == user_id and rank.rank_type == RankType.ALL_TIME:
 				return rank
 		else:
-			rank = Rank(user_id, 1000, RankType.ALL_TIME, None, None)
+			rank = Rank(user_id, self.__elo_start, RankType.ALL_TIME, None, None)
 			session.add(rank)
 			session.commit()
 			return rank
