@@ -61,9 +61,9 @@ async def past_ranking(ctx, month='01', year='1970', unranked='unranked'):
 @bot.command(name='show_rank', help='Use this command to get past rankings')
 async def show_rank(ctx, username, rank_type='month'):
 	if rank_type == 'all':
-		rank_text = service.get_user_rank(username, RankType.ALL_TIME, None)
+		rank_text = service.get_user_rank(username.lower(), RankType.ALL_TIME, None)
 	else:
-		rank_text = service.get_user_rank(username, RankType.MONTH, datetime.datetime.now())
+		rank_text = service.get_user_rank(username.lower(), RankType.MONTH, datetime.datetime.now())
 	await ctx.channel.send(rank_text)
 	return
 
@@ -76,18 +76,18 @@ async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month
 			usage_text = service.get_all_pokemon_usage(usage_type, RankType.MONTH, datetime.datetime.now())
 	else:
 		if rank_type == 'all':
-			usage_text = service.get_pokemon_usage(username, usage_type, RankType.ALL_TIME, None)
+			usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.ALL_TIME, None)
 		else:
-			usage_text = service.get_pokemon_usage(username, usage_type, RankType.MONTH, datetime.datetime.now())
+			usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.MONTH, datetime.datetime.now())
 	await ctx.channel.send(f'{username}: {usage_text}')
 	return
 
 @bot.command(name='rival', help='Use this command to get rival')
 async def rival(ctx, username, rival_type='most', rank_type='month'):
 	if rank_type == 'all':
-		rival_text = service.get_rival(username, rival_type, RankType.ALL_TIME, None)
+		rival_text = service.get_rival(username.lower(), rival_type, RankType.ALL_TIME, None)
 	else:
-		rival_text = service.get_rival(username, rival_type, RankType.MONTH, datetime.datetime.now())
+		rival_text = service.get_rival(username.lower(), rival_type, RankType.MONTH, datetime.datetime.now())
 	await ctx.channel.send(f'{username}: {rival_text}')
 	return
 
