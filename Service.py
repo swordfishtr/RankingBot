@@ -121,16 +121,13 @@ class Service:
 			return 'No pokemon found'
 
 	def get_user_rank(self, username, rank_type, date):
-		response = session.execute(select(User).where(User.username == username.strip().lower()))
-		for user in response.scalars():
-			if user.username == username:
-				if rank_type == RankType.MONTH:
-					user_rank = next((x for x in user.ranks if x.rank_type == rank_type and x.month == date.month and x.year == date.year), None)
-				else:
-					user_rank = next((x for x in user.ranks if x.rank_type == rank_type), None)
-				return round(user_rank.value)
+		rank_text = self.generate_rank_text(rank_type, date, True, 999999)
+		for line in rank_text.split('\n'):
+			if username in line:
+				return line
+		return 'Username not found'
 
-	def generate_rank_text(self, rank_type, date, unranked):
+	def generate_rank_text(self, rank_type, date, unranked, limit):
 		response = session.execute(select(User))
 		user_rank_list = []
 		for user in response.scalars():
@@ -143,7 +140,7 @@ class Service:
 		user_rank_list.sort(key=lambda x: x['rank'], reverse=True)
 		output_text = ''
 		idx = 1
-		for ur in user_rank_list:
+		for i, ur in enumerate(user_rank_list):
 			if rank_type == RankType.MONTH:
 				won_matches = [x for x in ur['user'].won_matches if x.date.month == date.month and x.date.year == date.year]
 				lost_matches = [x for x in ur['user'].lost_matches if x.date.month == date.month and x.date.year == date.year]
@@ -158,6 +155,8 @@ class Service:
 				idx += 1
 			elif unranked:
 				output_text += f'**{ur["user"].username}**: {round(ur["rank"])} ({total_games}/{wins}/{losses}) (ur)\n'
+			if limit and limit - 1 == i:
+				break
 		return output_text
 
 	def process_match(self, link):

@@ -44,11 +44,11 @@ async def on_message(message):
 	await bot.process_commands(message)
 
 @bot.command(name='ranking', help='Use this command to get rankings')
-async def ranking(ctx, rank_type='month', unranked='unranked'):
+async def ranking(ctx, rank_type='month', unranked='unranked', limit=20):
 	if rank_type == 'all':
-		rank_text = service.generate_rank_text(RankType.ALL_TIME, None, unranked == 'unranked')
+		rank_text = service.generate_rank_text(RankType.ALL_TIME, None, unranked == 'unranked', limit)
 	else:
-		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(), unranked == 'unranked')
+		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(), unranked == 'unranked', limit)
 	await ctx.channel.send(rank_text)
 	return
 
@@ -64,7 +64,7 @@ async def show_rank(ctx, username, rank_type='month'):
 		rank_text = service.get_user_rank(username, RankType.ALL_TIME, None)
 	else:
 		rank_text = service.get_user_rank(username, RankType.MONTH, datetime.datetime.now())
-	await ctx.channel.send(f'{username}: {rank_text}')
+	await ctx.channel.send(rank_text)
 	return
 
 @bot.command(name='pokemon_usage', help='Use this command to get pokemon usage')

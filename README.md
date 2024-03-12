@@ -19,6 +19,7 @@
   - Parameters:
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
     - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
+    - `limit`: Takes any integer value, defaults to `20`
   - Return:
     - List of elo and ranking for all users
       - If `month`, shows only elo/rank based on current month. If `all`, shows all time elo/rank
