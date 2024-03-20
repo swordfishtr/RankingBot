@@ -7,10 +7,10 @@ from sqlalchemy import select
 class Service:
 	def __init__(self):
 		self.__elo_floor = 100
-		self.__k_factor = 32
-		self.__rating = 400
+		self.__k_factor = 60
+		self.__rating = 1000
 		self.__elo_start = 1000
-		self.__ranked_threshold = 10
+		self.__ranked_threshold = 15
 
 		self.latest_rank_update_text = {}
 
@@ -56,7 +56,7 @@ class Service:
 				return 'No rival found'
 
 
-	def get_pokemon_usage(self, username, usage_type, rank_type, date):
+	def get_pokemon_usage(self, username, usage_type, rank_type, date, limit):
 		response = session.execute(select(User).where(User.username == username.strip().lower()))
 		for user in response.scalars():
 			if user.username == username:
@@ -72,21 +72,21 @@ class Service:
 						pokemon.extend(match.winning_roster.split(','))
 					for match in lost_matches:
 						pokemon.extend(match.losing_roster.split(','))
-					return max(set(pokemon), key=pokemon.count)
+					return self.__get_pokemon_usage_text(pokemon, limit, len(won_matches) + len(lost_matches))
 				elif usage_type == 'win':
 					pokemon = []
 					for match in won_matches:
 						pokemon.extend(match.winning_roster.split(','))
-					return max(set(pokemon), key=pokemon.count)
+					return self.__get_pokemon_usage_text(pokemon, limit, len(won_matches))
 				elif usage_type == 'lose':
 					pokemon = []
 					for match in lost_matches:
 						pokemon.extend(match.losing_roster.split(','))
-					return max(set(pokemon), key=pokemon.count)
+					return self.__get_pokemon_usage_text(pokemon, limit, len(lost_matches))
 				else:
 					return 'No pokemon found'
 
-	def get_all_pokemon_usage(self, usage_type, rank_type, date):
+	def get_all_pokemon_usage(self, usage_type, rank_type, date, limit):
 		response = session.execute(select(User))
 		all_won_matches = []
 		all_lost_matches = []
@@ -106,22 +106,38 @@ class Service:
 				pokemon.extend(match.winning_roster.split(','))
 			for match in lost_matches:
 				pokemon.extend(match.losing_roster.split(','))
-			return max(set(pokemon), key=pokemon.count)
+			return self.__get_pokemon_usage_text(pokemon, limit, len(won_matches) + len(lost_matches))
 		elif usage_type == 'win':
 			pokemon = []
 			for match in won_matches:
 				pokemon.extend(match.winning_roster.split(','))
-			return max(set(pokemon), key=pokemon.count)
+			return self.__get_pokemon_usage_text(pokemon, limit, len(won_matches))
 		elif usage_type == 'lose':
 			pokemon = []
 			for match in lost_matches:
 				pokemon.extend(match.losing_roster.split(','))
-			return max(set(pokemon), key=pokemon.count)
+			return self.__get_pokemon_usage_text(pokemon, limit, len(lost_matches))
 		else:
 			return 'No pokemon found'
 
+	def __get_pokemon_usage_text(self, pokemon, limit, total_matches):
+		pokemon_count = {}
+		usage_text = ''
+		for p in pokemon:
+			pokemon_count[p] = pokemon_count.get(p, 0) + 1
+		idx = 0
+		for k, v in sorted(pokemon_count.items(), key=lambda item: item[1], reverse=True):
+			idx += 1
+			usage_text += f'{idx}. **{k}** ({self.__get_percentage(v, total_matches)})\n'
+			if idx == limit:
+				break
+		return usage_text
+
+	def __get_percentage(self, value, total):
+		return f'{round((value / total) * 100)}%'
+
 	def get_user_rank(self, username, rank_type, date):
-		rank_text = self.generate_rank_text(rank_type, date, True, 999999)
+		rank_text = self.generate_rank_text(rank_type, date, True, 99999999)
 		for line in rank_text.split('\n'):
 			if username in line:
 				return line
@@ -155,7 +171,7 @@ class Service:
 				idx += 1
 			elif unranked:
 				output_text += f'**{ur["user"].username}**: {round(ur["rank"])} ({total_games}/{wins}/{losses}) (ur)\n'
-			if limit and limit - 1 == i:
+			if len(output_text.split('\n')) - 1 == limit:
 				break
 		return output_text
 

@@ -43,19 +43,28 @@ async def on_message(message):
 		await message.channel.send(service.latest_rank_update_text[RankType.MONTH])
 	await bot.process_commands(message)
 
+@bot.command(name='initialize_from_file', help='Use this command to initialize from file')
+async def initialize_from_file(ctx):
+	with open('replays.txt') as file:
+		for line in file:
+			line = 'https://replay.pokemonshowdown.com/gen9customgame-' + line.strip()
+			service.process_match(line)
+	await ctx.channel.send('Finished initializing')
+	return
+
 @bot.command(name='ranking', help='Use this command to get rankings')
-async def ranking(ctx, rank_type='month', unranked='unranked', limit=20):
+async def ranking(ctx, rank_type='month', unranked='ranked', limit=20):
 	if rank_type == 'all':
 		rank_text = service.generate_rank_text(RankType.ALL_TIME, None, unranked == 'unranked', limit)
 	else:
 		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(), unranked == 'unranked', limit)
-	await ctx.channel.send(rank_text)
+	await ctx.channel.send(embed=generate_embed('👑   Rankings   👑', rank_text, 0x8B0000))
 	return
 
 @bot.command(name='past_ranking', help='Use this command to get past rankings')
-async def past_ranking(ctx, month='01', year='1970', unranked='unranked'):
-	rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime(year=int(year), month=int(month), day=1), unranked == 'unranked')
-	await ctx.channel.send(rank_text)
+async def past_ranking(ctx, month='01', year='1970', unranked='ranked', limit=20):
+	rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime(year=int(year), month=int(month), day=1), unranked == 'unranked', limit)
+	await ctx.channel.send(embed=generate_embed(f'⌛   Past Rankings ({month}/{year})   ⌛', rank_text, 0xCD7F32))
 	return
 
 @bot.command(name='show_rank', help='Use this command to get past rankings')
@@ -64,22 +73,24 @@ async def show_rank(ctx, username, rank_type='month'):
 		rank_text = service.get_user_rank(username.lower(), RankType.ALL_TIME, None)
 	else:
 		rank_text = service.get_user_rank(username.lower(), RankType.MONTH, datetime.datetime.now())
-	await ctx.channel.send(rank_text)
+	await ctx.channel.send(embed=generate_embed(f'⭐   {username} Rank   ⭐', rank_text, 0x4169E1))
 	return
 
 @bot.command(name='pokemon_usage', help='Use this command to get pokemon usage')
-async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month'):
+async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month', limit=5):
 	if username == 'all':
 		if rank_type == 'all':
-			usage_text = service.get_all_pokemon_usage(usage_type, RankType.ALL_TIME, None)
+			usage_text = service.get_all_pokemon_usage(usage_type, RankType.ALL_TIME, None, limit)
 		else:
-			usage_text = service.get_all_pokemon_usage(usage_type, RankType.MONTH, datetime.datetime.now())
+			usage_text = service.get_all_pokemon_usage(usage_type, RankType.MONTH, datetime.datetime.now(), limit)
 	else:
 		if rank_type == 'all':
-			usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.ALL_TIME, None)
+			usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.ALL_TIME, None, limit)
 		else:
-			usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.MONTH, datetime.datetime.now())
-	await ctx.channel.send(f'{username}: {usage_text}')
+			usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.MONTH, datetime.datetime.now(), limit)
+	embed = generate_embed(f'🐉   {"All Time" if username == "all" else username} Pokemon Usage   🐉', usage_text, 0x1DB954)
+	embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower()}.gif')
+	await ctx.channel.send(embed=embed)
 	return
 
 @bot.command(name='rival', help='Use this command to get rival')
@@ -88,8 +99,12 @@ async def rival(ctx, username, rival_type='most', rank_type='month'):
 		rival_text = service.get_rival(username.lower(), rival_type, RankType.ALL_TIME, None)
 	else:
 		rival_text = service.get_rival(username.lower(), rival_type, RankType.MONTH, datetime.datetime.now())
-	await ctx.channel.send(f'{username}: {rival_text}')
+	await ctx.channel.send(embed=generate_embed(f'😈   {username} Rival   😈', rival_text, 0xA020F0))
 	return
 
 def clean_link(message):
 	return MATCH_PREFIX + message.split(MATCH_PREFIX)[1].split('\n')[0].split(' ')[0].split('>')[0].strip()
+
+def generate_embed(title, content, color):
+	embed = discord.Embed(title=title, description=content, color=color)
+	return embed
