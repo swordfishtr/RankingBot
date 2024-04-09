@@ -40,13 +40,15 @@ class Rank(BaseModel):
 	user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 	value = Column(Integer, nullable=False)
 	rank_type = Column(Enum(RankType), nullable=False)
+	format = Column(String, nullable=False)
 	month = Column(Integer)
 	year = Column(Integer)
 
-	def __init__(self, user_id, value, rank_type, month, year):
+	def __init__(self, user_id, value, rank_type, format, month, year):
 		self.user_id = user_id
 		self.value = value
 		self.rank_type = rank_type
+		self.format = format
 		self.month = month
 		self.year = year
 
