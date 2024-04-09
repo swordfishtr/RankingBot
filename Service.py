@@ -20,7 +20,7 @@ class Service:
 			return match.date
 		return None
 
-	def get_rival(self, username, rival_type, rank_type, date):
+	def get_rival(self, username, rival_type, rank_type, date, limit):
 		response = session.execute(select(User).where(User.username == username.strip().lower()))
 		for user in response.scalars():
 			if user.username == username:
@@ -36,24 +36,35 @@ class Service:
 						users.append(match.loser_id)
 					for match in lost_matches:
 						users.append(match.winner_id)
-					rival_id = max(set(users), key=users.count)
+					return self.__get_rival_text(users, limit, len(won_matches) + len(lost_matches))
 				elif rival_type == 'win':
 					users = []
 					for match in won_matches:
 						users.append(match.loser_id)
-					rival_id = max(set(users), key=users.count)
+					return self.__get_rival_text(users, limit, len(won_matches))
 				elif rival_type == 'lose':
 					users = []
 					for match in lost_matches:
 						users.append(match.winner_id)
-					rival_id = max(set(users), key=users.count)
+					return self.__get_rival_text(users, limit, len(lost_matches))
 				else:
-					rival_id = None
-				rival_response = session.execute(select(User).where(User.id == rival_id))
-				for user in rival_response.scalars():
-					if user.id == rival_id:
-						return user.username
-				return 'No rival found'
+					return 'No rival found'
+
+	def __get_rival_text(self, user_ids, limit, total_matches):
+		user_count = {}
+		usage_text = ''
+		for u in user_ids:
+			user_count[u] = user_count.get(u, 0) + 1
+		idx = 0
+		for k, v in sorted(user_count.items(), key=lambda item: item[1], reverse=True):
+			idx += 1
+			user_response = session.execute(select(User).where(User.id == k))
+			for user in user_response.scalars():
+				if user.id == k:
+					usage_text += f'{idx}. **{user.username}** ({self.__get_percentage(v, total_matches)})\n'
+			if idx == limit:
+				break
+		return usage_text
 
 
 	def get_pokemon_usage(self, username, usage_type, rank_type, date, limit):

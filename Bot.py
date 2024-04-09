@@ -94,11 +94,11 @@ async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month
 	return
 
 @bot.command(name='rival', help='Use this command to get rival')
-async def rival(ctx, username, rival_type='most', rank_type='month'):
+async def rival(ctx, username, rival_type='most', rank_type='month', limit=5):
 	if rank_type == 'all':
-		rival_text = service.get_rival(username.lower(), rival_type, RankType.ALL_TIME, None)
+		rival_text = service.get_rival(username.lower(), rival_type, RankType.ALL_TIME, None, limit)
 	else:
-		rival_text = service.get_rival(username.lower(), rival_type, RankType.MONTH, datetime.datetime.now())
+		rival_text = service.get_rival(username.lower(), rival_type, RankType.MONTH, datetime.datetime.now(), limit)
 	await ctx.channel.send(embed=generate_embed(f'😈   {username} Rival   😈', rival_text, 0xA020F0))
 	return
 
