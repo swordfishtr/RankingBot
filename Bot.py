@@ -100,7 +100,7 @@ async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month
 			else:
 				usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.MONTH, datetime.datetime.utcnow(), limit, format)
 		embed = generate_embed(f'🐉   {"All Time" if username == "all" else username} Pokemon Usage   🐉', usage_text, 0x1DB954)
-		embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower()}.gif')
+		embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
 		await ctx.channel.send(embed=embed)
 	except Exception as e:
 		print(e)
@@ -116,7 +116,7 @@ async def pokemon_usage_one(ctx, pokemon, usage_type='most', rank_type='month', 
 			usage_text = service.get_pokemon_usage_one(pokemon, usage_type, RankType.MONTH, datetime.datetime.utcnow(), format)
 		embed = generate_embed(f'🐲   {pokemon} Usage   🐲', usage_text, 0xFFD700)
 		if '**' in usage_text:
-			embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower()}.gif')
+			embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
 		await ctx.channel.send(embed=embed)
 	except Exception as e:
 		print(e)
@@ -171,7 +171,7 @@ async def update_usage_stats():
 	message = (await usage_channel.history(limit=1).flatten())[0]
 	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.utcnow(), 20, 'gen9customgame')
 	embed = generate_embed(f'🐉   Monthly Pokemon Usage   🐉', usage_text, 0x1DB954)
-	embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower()}.gif')
+	embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
 	try:
 		await message.edit(embed=embed)
 	except:
