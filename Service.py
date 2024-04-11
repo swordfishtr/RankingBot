@@ -13,7 +13,7 @@ class Service:
 		self.__ranked_threshold = 15
 
 		self.latest_rank_update_text = {}
-		self.ladder_updates_enabled = False
+		self.ladder_enabled = False
 
 	def get_latest_match_date(self):
 		response = session.execute(select(Match).order_by(Match.date.desc()))

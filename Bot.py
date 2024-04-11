@@ -11,6 +11,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD_NAME = os.getenv('DISCORD_GUILD')
 MATCH_PREFIX = os.getenv('MATCH_PREFIX')
 MATCH_CHANNEL = os.getenv('MATCH_CHANNEL')
+POKEMON_USAGE_CHANNEL = os.getenv('POKEMON_USAGE_CHANNEL')
 
 intents = discord.Intents.default()
 intents.members = True
@@ -20,10 +21,9 @@ service = Service()
 
 @bot.event
 async def on_ready():
-	guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
+	guild, match_channel = get_channel_by_name(MATCH_CHANNEL)
 	print(f'{bot.user} is connected to the following guild:\n{guild.name}(id: 'f'{guild.id})')
 	print(f'.....Initializing.....')
-	match_channel = next((x for x in guild.text_channels if x.name == MATCH_CHANNEL), None)
 	latest_match_date = service.get_latest_match_date()
 	if latest_match_date:
 		messages = [message async for message in match_channel.history(limit=None, after=latest_match_date, oldest_first=True)]
@@ -40,21 +40,23 @@ async def on_message(message):
 	if message.channel.name == MATCH_CHANNEL and MATCH_PREFIX in message.content:
 		link = clean_link(message.content)
 		response = service.process_match(link)
-		if service.ladder_updates_enabled:
+		if service.ladder_enabled:
 			if response:
 				await message.channel.send(embed=generate_embed('🪜   Ladder Update   🪜', service.latest_rank_update_text[RankType.MONTH], 0x5C2C06))
 			else:
 				await message.channel.send(embed=generate_embed('🛑   Warning   🛑', 'Match already processed', 0xE60019))
+		await update_usage_stats()
 	await bot.process_commands(message)
 
 @bot.command(name='ranking', help='Use this command to get rankings')
 async def ranking(ctx, rank_type='month', unranked='ranked', limit=20, format='gen9customgame'):
 	try:
-		if rank_type == 'all':
-			rank_text = service.generate_rank_text(RankType.ALL_TIME, None, unranked == 'unranked', limit, format)
-		else:
-			rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.utcnow(), unranked == 'unranked', limit, format)
-		await ctx.channel.send(embed=generate_embed('👑   Rankings   👑', rank_text, 0x8B0000))
+		if service.ladder_enabled:
+			if rank_type == 'all':
+				rank_text = service.generate_rank_text(RankType.ALL_TIME, None, unranked == 'unranked', limit, format)
+			else:
+				rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.utcnow(), unranked == 'unranked', limit, format)
+			await ctx.channel.send(embed=generate_embed('👑   Rankings   👑', rank_text, 0x8B0000))
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -73,11 +75,12 @@ async def past_ranking(ctx, month='01', year='1970', unranked='ranked', limit=20
 @bot.command(name='show_rank', help='Use this command to get past rankings')
 async def show_rank(ctx, username, rank_type='month', format='gen9customgame'):
 	try:
-		if rank_type == 'all':
-			rank_text = service.get_user_rank(username.lower(), RankType.ALL_TIME, None, format)
-		else:
-			rank_text = service.get_user_rank(username.lower(), RankType.MONTH, datetime.datetime.utcnow(), format)
-		await ctx.channel.send(embed=generate_embed(f'⭐   {username} Rank   ⭐', rank_text, 0x4169E1))
+		if service.ladder_enabled:
+			if rank_type == 'all':
+				rank_text = service.get_user_rank(username.lower(), RankType.ALL_TIME, None, format)
+			else:
+				rank_text = service.get_user_rank(username.lower(), RankType.MONTH, datetime.datetime.utcnow(), format)
+			await ctx.channel.send(embed=generate_embed(f'⭐   {username} Rank   ⭐', rank_text, 0x4169E1))
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -133,11 +136,11 @@ async def rival(ctx, username, rival_type='most', rank_type='month', limit=5, fo
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='toggle_ladder_updates', help='Use this command to toggle ladder updates')
-async def toggle_ladder_updates(ctx):
+@bot.command(name='toggle_ladder', help='Use this command to toggle ladder')
+async def toggle_ladder(ctx):
 	try:
-		service.ladder_updates_enabled = not service.ladder_updates_enabled
-		await ctx.channel.send(f'Ladder updates are now {"enabled" if service.ladder_updates_enabled else "disabled"}.')
+		service.ladder_enabled = not service.ladder_enabled
+		await ctx.channel.send(f'Clod\'s Ladder is now {"enabled" if service.ladder_enabled else "disabled"}.')
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -146,7 +149,7 @@ async def toggle_ladder_updates(ctx):
 @bot.command(name='update_pokemon_usage', help='Use this command to update te pokemon usage')
 async def update_pokemon_usage(ctx):
 	try:
-		await update_usage_stats('usage-stats')
+		await update_usage_stats()
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -159,9 +162,12 @@ def generate_embed(title, content, color):
 	embed = discord.Embed(title=title, description=content, color=color)
 	return embed
 
-async def update_usage_stats(channel):
+def get_channel_by_name(channel):
 	guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
-	usage_channel = next((x for x in guild.text_channels if x.name == channel), None)
+	return guild, next((x for x in guild.text_channels if x.name == channel), None)
+
+async def update_usage_stats():
+	guild, usage_channel = get_channel_by_name(POKEMON_USAGE_CHANNEL)
 	message = (await usage_channel.history(limit=1).flatten())[0]
 	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.utcnow(), 20, 'gen9customgame')
 	embed = generate_embed(f'🐉   Monthly Pokemon Usage   🐉', usage_text, 0x1DB954)
