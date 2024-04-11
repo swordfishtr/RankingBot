@@ -13,6 +13,7 @@ class Service:
 		self.__ranked_threshold = 15
 
 		self.latest_rank_update_text = {}
+		self.ladder_updates_enabled = False
 
 	def get_latest_match_date(self):
 		response = session.execute(select(Match).order_by(Match.date.desc()))
@@ -66,6 +67,13 @@ class Service:
 				break
 		return usage_text
 
+	def get_pokemon_usage_one(self, pokemon, usage_type, rank_type, date, format):
+		usage_text = self.get_all_pokemon_usage(usage_type, rank_type, date, 99999999, format)
+		for line in usage_text.split('\n'):
+			pkm_name = line.split("**")[1].split("**")[0].lower()
+			if pokemon.lower() == pkm_name:
+				return line
+		return 'Pokemon not found'
 
 	def get_pokemon_usage(self, username, usage_type, rank_type, date, limit, format):
 		response = session.execute(select(User).where(User.username == username.strip().lower()))
@@ -191,38 +199,45 @@ class Service:
 		try:
 			req = Request(url=link, headers={'User-Agent': 'Mozilla/5.0'})
 			raw_data = json.loads(urlopen(req).read())
-			log = raw_data['log']
-			replay_id = raw_data['id']
-			format = raw_data['formatid']
-			date = datetime.datetime.fromtimestamp(raw_data['uploadtime'])
+		except OSError as err:
+			print(f'Process Match Failed: {link}\nOS error: {err}')
+			return
+		except ValueError as err:
+			print(f'Process Match Failed: {link}\nValue error: {err}')
+			return
+		except Exception as err:
+			print(f'Process Match Failed: {link}\nException ({type(err)}): {err}')
+			return
+		log = raw_data['log']
+		replay_id = raw_data['id']
+		format = raw_data['formatid']
+		date = datetime.datetime.utcfromtimestamp(raw_data['uploadtime'])
 
-			user_one = self.__create_user(log.split('|player|p1|')[1].split('|')[0].strip().lower())
-			user_two = self.__create_user(log.split('|player|p2|')[1].split('|')[0].strip().lower())
+		user_one = self.__create_user(log.split('|player|p1|')[1].split('|')[0].strip().lower())
+		user_two = self.__create_user(log.split('|player|p2|')[1].split('|')[0].strip().lower())
 
-			player_one_roster = []
-			for token in log.split('|poke|p1|')[1:]:
-				player_one_roster.append(token.split('|')[0].split(',')[0].strip())
+		player_one_roster = []
+		for token in log.split('|poke|p1|')[1:]:
+			player_one_roster.append(token.split('|')[0].split(',')[0].strip())
 
-			player_two_roster = []
-			for token in log.split('|poke|p2|')[1:]:
-				player_two_roster.append(token.split('|')[0].split(',')[0].strip())
+		player_two_roster = []
+		for token in log.split('|poke|p2|')[1:]:
+			player_two_roster.append(token.split('|')[0].split(',')[0].strip())
 
-			winner_username = log.split('|win|')[1].split('|')[0].strip()
+		winner_username = log.split('|win|')[1].split('|')[0].strip().lower()
 
-			if winner_username == user_one.username:
-				winner = user_one
-				winning_roster = ','.join(player_one_roster)
-				loser = user_two
-				losing_roster = ','.join(player_two_roster)
-			else:
-				winner = user_two
-				winning_roster = ','.join(player_two_roster)
-				loser = user_one
-				losing_roster = ','.join(player_one_roster)
+		if winner_username == user_one.username:
+			winner = user_one
+			winning_roster = ','.join(player_one_roster)
+			loser = user_two
+			losing_roster = ','.join(player_two_roster)
+		else:
+			winner = user_two
+			winning_roster = ','.join(player_two_roster)
+			loser = user_one
+			losing_roster = ','.join(player_one_roster)
 
-			return self.__create_match(replay_id, format, date, winner, winning_roster, loser, losing_roster)
-		except:
-			print(f'Link not found: {link}')
+		return self.__create_match(replay_id, format, date, winner, winning_roster, loser, losing_roster)
 
 	def __create_user(self, username):
 		response = session.execute(select(User).where(User.username == username))
@@ -288,5 +303,5 @@ class Service:
 		loser_rank.value = max(loser_rank.value + (self.__k_factor * (0 - loser_prob)), self.__elo_floor)
 
 		session.commit()
-		self.latest_rank_update_text[rank_type] = f'{winner.username}: {original_winner_rank_value} --> {winner_rank.value}\n' \
-		                                f'{loser.username}: {original_loser_rank_value} --> {loser_rank.value}'
+		self.latest_rank_update_text[rank_type] = f'**{winner.username}**: {original_winner_rank_value} --> {winner_rank.value}\n' \
+		                                f'**{loser.username}**: {original_loser_rank_value} --> {loser_rank.value}'
