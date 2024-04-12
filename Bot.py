@@ -123,6 +123,21 @@ async def pokemon_usage_one(ctx, pokemon, usage_type='most', rank_type='month', 
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
+@bot.command(name='past_pokemon_usage', help='Use this command to get past pokemon usage')
+async def past_pokemon_usage(ctx, username='all', usage_type='most', month='01', year='1970', limit=5, format='gen9customgame'):
+	try:
+		if username == 'all':
+			usage_text = service.get_all_pokemon_usage(usage_type, RankType.MONTH, datetime.datetime(year=int(year), month=int(month), day=1, tzinfo=datetime.timezone.utc), limit, format)
+		else:
+			usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.MONTH, datetime.datetime(year=int(year), month=int(month), day=1, tzinfo=datetime.timezone.utc), limit, format)
+		embed = generate_embed(f'🐉⌛  {"All Time" if username == "all" else username} Pokemon Usage ({month}/{year})  ⌛🐉', usage_text, 0x1DB954)
+		embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
+		await ctx.channel.send(embed=embed)
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
 @bot.command(name='rival', help='Use this command to get rival')
 async def rival(ctx, username, rival_type='most', rank_type='month', limit=5, format='gen9customgame'):
 	try:

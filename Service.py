@@ -153,7 +153,10 @@ class Service:
 		return usage_text
 
 	def __get_percentage(self, value, total):
-		return f'{round((value / total) * 100)}%'
+		if round((value / total) * 100) == 0:
+			return f'{round((value / total) * 100, 2)}%'
+		else:
+			return f'{round((value / total) * 100)}%'
 
 	def get_user_rank(self, username, rank_type, date, format):
 		rank_text = self.generate_rank_text(rank_type, date, True, 99999999, format)
