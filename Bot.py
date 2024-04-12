@@ -13,7 +13,7 @@ MATCH_PREFIX = os.getenv('MATCH_PREFIX')
 MATCH_CHANNEL = os.getenv('MATCH_CHANNEL')
 POKEMON_USAGE_CHANNEL = os.getenv('POKEMON_USAGE_CHANNEL')
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 bot = commands.Bot(command_prefix='+', intents=intents)
 
@@ -183,12 +183,12 @@ def get_channel_by_name(channel):
 
 async def update_usage_stats():
 	guild, usage_channel = get_channel_by_name(POKEMON_USAGE_CHANNEL)
-	message = (await usage_channel.history(limit=1).flatten())[0]
+	messages = [message async for message in usage_channel.history(limit=1, oldest_first=False)]
 	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.utcnow(), 20, 'gen9customgame')
 	embed = generate_embed(f'🐉   Monthly Pokemon Usage   🐉', usage_text, 0x1DB954)
 	embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
 	try:
-		await message.edit(embed=embed)
+		await messages[0].edit(embed=embed)
 	except:
 		await usage_channel.send(embed=embed)
 
