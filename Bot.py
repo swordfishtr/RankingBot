@@ -12,6 +12,7 @@ GUILD_NAME = os.getenv('DISCORD_GUILD')
 MATCH_PREFIX = os.getenv('MATCH_PREFIX')
 MATCH_CHANNEL = os.getenv('MATCH_CHANNEL')
 POKEMON_USAGE_CHANNEL = os.getenv('POKEMON_USAGE_CHANNEL')
+LADDER_CHANNEL = os.getenv('LADDER_CHANNEL')
 
 intents = discord.Intents.all()
 intents.members = True
@@ -46,6 +47,7 @@ async def on_message(message):
 			else:
 				await message.channel.send(embed=generate_embed('🛑   Warning   🛑', 'Match already processed', 0xE60019))
 		await update_usage_stats()
+		await update_ladder_stats()
 	await bot.process_commands(message)
 
 @bot.command(name='ranking', help='Use this command to get rankings')
@@ -161,10 +163,19 @@ async def toggle_ladder(ctx):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='update_pokemon_usage', help='Use this command to update te pokemon usage')
+@bot.command(name='update_pokemon_usage', help='Use this command to update the pokemon usage')
 async def update_pokemon_usage(ctx):
 	try:
 		await update_usage_stats()
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='update_ladder', help='Use this command to update the ladder')
+async def update_ladder(ctx):
+	try:
+		await update_ladder_stats()
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -187,6 +198,18 @@ async def update_usage_stats():
 	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.utcnow(), 20, 'gen9customgame')
 	embed = generate_embed(f'🐉   Monthly Pokemon Usage   🐉', usage_text, 0x1DB954)
 	embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
+	try:
+		await messages[0].edit(embed=embed)
+	except:
+		await usage_channel.send(embed=embed)
+
+async def update_ladder_stats():
+	guild, usage_channel = get_channel_by_name(LADDER_CHANNEL)
+	messages = [message async for message in usage_channel.history(limit=1, oldest_first=False)]
+	rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.utcnow(), False, 20, 'gen9customgame')
+	if len(rank_text.split('\n')) < 20:
+		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.utcnow(), True, 20, 'gen9customgame')
+	embed = generate_embed('👑   Monthly Rankings   👑', rank_text, 0x8B0000)
 	try:
 		await messages[0].edit(embed=embed)
 	except:

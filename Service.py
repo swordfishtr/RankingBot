@@ -189,10 +189,10 @@ class Service:
 			wins = len(won_matches)
 			losses = len(lost_matches)
 			if (total_games >= self.__ranked_threshold):
-				output_text += f'{idx}. **{ur["user"].username}**: {round(ur["rank"])} ({total_games}/{wins}/{losses})\n'
+				output_text += f'{idx}. **{ur["user"].username}**: {round(ur["rank"])} ({total_games}P {wins}W {losses}L)\n'
 				idx += 1
 			elif unranked:
-				output_text += f'**{ur["user"].username}**: {round(ur["rank"])} ({total_games}/{wins}/{losses}) (ur)\n'
+				output_text += f'**{ur["user"].username}**: {round(ur["rank"])} ({total_games}P {wins}W {losses}L) *unranked*\n'
 			if len(output_text.split('\n')) - 1 == limit:
 				break
 		return output_text
