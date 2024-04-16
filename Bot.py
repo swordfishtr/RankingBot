@@ -24,30 +24,31 @@ service = Service()
 async def on_ready():
 	guild, match_channel = get_channel_by_name(MATCH_CHANNEL)
 	print(f'{bot.user} is connected to the following guild:\n{guild.name}(id: 'f'{guild.id})')
-	print(f'.....Initializing.....')
+	print('.....Initializing.....')
 	latest_match_date = service.get_latest_match_date()
-	if latest_match_date:
-		messages = [message async for message in match_channel.history(limit=None, after=latest_match_date, oldest_first=True)]
-	else:
-		messages = [message async for message in match_channel.history(limit=None, oldest_first=True)]
-	for message in messages:
-		if MATCH_PREFIX in message.content:
-			link = clean_link(message.content)
-			service.process_match(link)
-	print(f'.....Bot has finished initializing.....')
+	try:
+		await scan_replays(10, latest_match_date)
+		print('.....Bot has finished initializing.....')
+	except Exception as e:
+		print(e)
 
 @bot.event
 async def on_message(message):
 	if message.channel.name == MATCH_CHANNEL and MATCH_PREFIX in message.content:
-		link = clean_link(message.content)
-		response = service.process_match(link)
-		if service.ladder_enabled:
-			if response:
-				await message.channel.send(embed=generate_embed('🪜   Ladder Update   🪜', service.latest_rank_update_text[RankType.MONTH], 0x5C2C06))
-			else:
-				await message.channel.send(embed=generate_embed('🛑   Warning   🛑', 'Match already processed', 0xE60019))
-		await update_usage_stats()
-		await update_ladder_stats()
+		try:
+			links = get_links(message.content)
+			for link in links:
+				response = service.process_match(link)
+				if service.ladder_enabled:
+					if response:
+						await message.channel.send(embed=generate_embed('🪜   Ladder Update   🪜', service.latest_rank_update_text[RankType.MONTH], 0x5C2C06))
+					else:
+						await message.channel.send(embed=generate_embed('🛑   Warning   🛑', 'Match already processed', 0xE60019))
+			await update_usage_stats()
+			await update_ladder_stats()
+		except Exception as e:
+			print(e)
+			await message.channel.send(embed=BOT_WARNING_EMBED)
 	await bot.process_commands(message)
 
 @bot.command(name='ranking', help='Use this command to get rankings')
@@ -181,8 +182,24 @@ async def update_ladder(ctx):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-def clean_link(message):
-	return MATCH_PREFIX + message.split(MATCH_PREFIX)[1].split('\n')[0].split(' ')[0].split('>')[0].split('?')[0].strip()
+@bot.command(name='scan_all_replays', help='Use this command to scan all replays')
+async def scan_all_replays(ctx, month=None, year=None):
+	try:
+		if not month or not year:
+			await scan_replays()
+		else:
+			await scan_replays(10, datetime.datetime(year=int(year), month=int(month), day=1))
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+def get_links(message):
+	links = []
+	tokens = message.split(MATCH_PREFIX)[1:]
+	for token in tokens:
+		links.append(MATCH_PREFIX + token.split('\n')[0].split(' ')[0].split('>')[0].split('?')[0].strip())
+	return links
 
 def generate_embed(title, content, color):
 	embed = discord.Embed(title=title, description=content, color=color)
@@ -214,5 +231,31 @@ async def update_ladder_stats():
 		await messages[0].edit(embed=embed)
 	except:
 		await usage_channel.send(embed=embed)
+
+async def scan_replays(print_interval=100, date=None):
+	guild, match_channel = get_channel_by_name(MATCH_CHANNEL)
+	print(f'.....Scanning for replays{" after " + date.strftime("%m/%d/%Y") if date else ""}.....')
+	if date:
+		messages = [message async for message in match_channel.history(limit=None, after=date, oldest_first=True)]
+	else:
+		messages = [message async for message in match_channel.history(limit=None, oldest_first=True)]
+	count = len(messages)
+	print(f'.....Scanning {count} messages.....')
+	processed_matches = 0
+	already_processed_matches = 0
+	for idx, message in enumerate(messages):
+		if idx % print_interval == 0:
+			print(f'.....{idx} / {count} messages scanned.....')
+		if MATCH_PREFIX in message.content:
+			links = get_links(message.content)
+			for link in links:
+				response = service.process_match(link)
+				if response:
+					processed_matches += 1
+					print(f'**New** match processed ({processed_matches}): {link}')
+				else:
+					already_processed_matches += 1
+					print(f'Match already processed ({already_processed_matches}): {link}')
+	print(f'.....Bot has finished scanning ({processed_matches} new matches, {already_processed_matches} already processed).....')
 
 BOT_WARNING_EMBED = generate_embed(f'⚠   Bot Warning   ⚠', 'Something went wrong', 0x3B3B3B)
