@@ -13,6 +13,7 @@ MATCH_PREFIX = os.getenv('MATCH_PREFIX')
 MATCH_CHANNEL = os.getenv('MATCH_CHANNEL')
 POKEMON_USAGE_CHANNEL = os.getenv('POKEMON_USAGE_CHANNEL')
 LADDER_CHANNEL = os.getenv('LADDER_CHANNEL')
+DEV_USER = os.getenv('DEV_USER')
 
 intents = discord.Intents.all()
 intents.members = True
@@ -157,8 +158,11 @@ async def rival(ctx, username, rival_type='most', rank_type='month', limit=5, fo
 @bot.command(name='toggle_ladder', help='Use this command to toggle ladder')
 async def toggle_ladder(ctx):
 	try:
-		service.ladder_enabled = not service.ladder_enabled
-		await ctx.channel.send(f'Clod\'s Ladder is now {"enabled" if service.ladder_enabled else "disabled"}.')
+		if ctx.author.display_name == DEV_USER:
+			service.ladder_enabled = not service.ladder_enabled
+			await ctx.channel.send(f'Clod\'s Ladder is now {"enabled" if service.ladder_enabled else "disabled"}.')
+		else:
+			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -167,7 +171,10 @@ async def toggle_ladder(ctx):
 @bot.command(name='update_pokemon_usage', help='Use this command to update the pokemon usage')
 async def update_pokemon_usage(ctx):
 	try:
-		await update_usage_stats()
+		if ctx.author.display_name == DEV_USER:
+			await update_usage_stats()
+		else:
+			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -176,7 +183,10 @@ async def update_pokemon_usage(ctx):
 @bot.command(name='update_ladder', help='Use this command to update the ladder')
 async def update_ladder(ctx):
 	try:
-		await update_ladder_stats()
+		if ctx.author.display_name == DEV_USER:
+			await update_ladder_stats()
+		else:
+			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -185,10 +195,82 @@ async def update_ladder(ctx):
 @bot.command(name='scan_all_replays', help='Use this command to scan all replays')
 async def scan_all_replays(ctx, month=None, year=None):
 	try:
-		if not month or not year:
-			await scan_replays()
+		if ctx.author.display_name == DEV_USER:
+			if not month or not year:
+				await scan_replays()
+			else:
+				await scan_replays(10, datetime.datetime(year=int(year), month=int(month), day=1))
 		else:
-			await scan_replays(10, datetime.datetime(year=int(year), month=int(month), day=1))
+			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='scan_thread', help='Use this command to scan a specific thread')
+async def scan_thread(ctx, thread, channel=MATCH_CHANNEL):
+	try:
+		if ctx.author.display_name == DEV_USER:
+			guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
+			match_channel = discord.utils.get(guild.text_channels, name=channel)
+			match_thread = discord.utils.get(match_channel.threads, name=thread)
+			messages = [message async for message in match_thread.history(limit=None, oldest_first=True)]
+			scan_messages(messages, 10)
+		else:
+			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='ping', help='Use this command to ping a specific role')
+async def ping(ctx, role, message):
+	try:
+		if role.lower() != 'here' and role.lower() != 'everyone':
+			discord_role = discord.utils.get(ctx.guild.roles, name=role)
+			await ctx.channel.send(f'{discord_role.mention} {message}')
+		else:
+			await ctx.channel.send(embed=BAD_ROLE_WARNING_EMBED)
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='glad', help='Use this command to ping a the 35 Gladiator role')
+async def ping_gladiator(ctx, message=None):
+	try:
+		discord_role = discord.utils.get(ctx.guild.roles, name='35 Gladiator')
+		await ctx.channel.send(f'{discord_role.mention}{" " + message if message else ""}')
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='spec', help='Use this command to ping a the 35 Spectator role')
+async def ping_spectator(ctx, message=None):
+	try:
+		discord_role = discord.utils.get(ctx.guild.roles, name='35 Spectator')
+		await ctx.channel.send(f'{discord_role.mention}{" " + message if message else ""}')
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='doub', help='Use this command to ping a the 35 Double role')
+async def ping_double(ctx, message=None):
+	try:
+		discord_role = discord.utils.get(ctx.guild.roles, name='35 Double')
+		await ctx.channel.send(f'{discord_role.mention}{" " + message if message else ""}')
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='baby', help='Use this command to ping a the 35 Baby role')
+async def ping_baby(ctx, message=None):
+	try:
+		discord_role = discord.utils.get(ctx.guild.roles, name='35 Baby')
+		await ctx.channel.send(f'{discord_role.mention}{" " + message if message else ""}')
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -239,6 +321,10 @@ async def scan_replays(print_interval=100, date=None):
 		messages = [message async for message in match_channel.history(limit=None, after=date, oldest_first=True)]
 	else:
 		messages = [message async for message in match_channel.history(limit=None, oldest_first=True)]
+	scan_messages(messages, print_interval)
+
+
+def scan_messages(messages, print_interval):
 	count = len(messages)
 	print(f'.....Scanning {count} messages.....')
 	processed_matches = 0
@@ -259,3 +345,5 @@ async def scan_replays(print_interval=100, date=None):
 	print(f'.....Bot has finished scanning ({processed_matches} new matches, {already_processed_matches} already processed).....')
 
 BOT_WARNING_EMBED = generate_embed(f'⚠   Bot Warning   ⚠', 'Something went wrong', 0x3B3B3B)
+DEV_ONLY_WARNING_EMBED = generate_embed(f'⚠   Bot Warning   ⚠', 'Sorry, this command is for developers only', 0x3B3B3B)
+BAD_ROLE_WARNING_EMBED = generate_embed(f'⚠   Bot Warning   ⚠', 'Sorry, this role is not allowed', 0x3B3B3B)
