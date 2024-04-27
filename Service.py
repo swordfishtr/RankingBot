@@ -306,5 +306,5 @@ class Service:
 		loser_rank.value = max(loser_rank.value + (self.__k_factor * (0 - loser_prob)), self.__elo_floor)
 
 		session.commit()
-		self.latest_rank_update_text[rank_type] = f'**{winner.username}**: {original_winner_rank_value} --> {winner_rank.value}\n' \
-		                                f'**{loser.username}**: {original_loser_rank_value} --> {loser_rank.value}'
+		self.latest_rank_update_text[rank_type] = f'**{winner.username}**: {round(original_winner_rank_value)} --> {round(winner_rank.value)}\n' \
+		                                f'**{loser.username}**: {round(original_loser_rank_value)} --> {round(loser_rank.value)}'
