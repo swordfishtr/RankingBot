@@ -219,7 +219,7 @@ async def scan_all_replays(ctx, day=None, month=None, year=None):
 			if not month or not year:
 				await scan_replays()
 			else:
-				await scan_replays(10, datetime.datetime(year=int(year), month=int(month), day=(1 if day is None else day)))
+				await scan_replays(10, datetime.datetime(year=int(year), month=int(month), day=(1 if day is None else int(day))))
 		else:
 			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
 	except Exception as e:
