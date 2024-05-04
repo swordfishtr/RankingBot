@@ -213,13 +213,13 @@ async def update_ladder(ctx):
 	return
 
 @bot.command(name='scan_all_replays', help='Use this command to scan all replays')
-async def scan_all_replays(ctx, month=None, year=None):
+async def scan_all_replays(ctx, day=None, month=None, year=None):
 	try:
 		if ctx.author.display_name == DEV_USER:
 			if not month or not year:
 				await scan_replays()
 			else:
-				await scan_replays(10, datetime.datetime(year=int(year), month=int(month), day=1))
+				await scan_replays(10, datetime.datetime(year=int(year), month=int(month), day=(1 if day is None else day)))
 		else:
 			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
 	except Exception as e:
