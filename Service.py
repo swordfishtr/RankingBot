@@ -21,6 +21,14 @@ class Service:
 			return match.date
 		return None
 
+	def get_num_matches_between(self, date_1, date_2):
+		query = session.query(Match).filter(Match.date.between(date_1, date_2))
+		response = session.execute(query)
+		size = 0
+		for match in response.scalars():
+			size += 1
+		return size
+
 	def get_rival(self, username, rival_type, rank_type, date, limit, format):
 		response = session.execute(select(User).where(User.username == username.strip().lower()))
 		for user in response.scalars():

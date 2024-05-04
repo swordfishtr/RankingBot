@@ -59,7 +59,7 @@ async def ranking(ctx, rank_type='month', unranked='ranked', limit=20, format='g
 			if rank_type == 'all':
 				rank_text = service.generate_rank_text(RankType.ALL_TIME, None, unranked == 'unranked', limit, format)
 			else:
-				rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.utcnow(), unranked == 'unranked', limit, format)
+				rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(datetime.UTC), unranked == 'unranked', limit, format)
 			await ctx.channel.send(embed=generate_embed('👑   Rankings   👑', rank_text, 0x8B0000))
 	except Exception as e:
 		print(e)
@@ -83,7 +83,7 @@ async def show_rank(ctx, username, rank_type='month', format='gen9customgame'):
 			if rank_type == 'all':
 				rank_text = service.get_user_rank(username.lower(), RankType.ALL_TIME, None, format)
 			else:
-				rank_text = service.get_user_rank(username.lower(), RankType.MONTH, datetime.datetime.utcnow(), format)
+				rank_text = service.get_user_rank(username.lower(), RankType.MONTH, datetime.datetime.now(datetime.UTC), format)
 			await ctx.channel.send(embed=generate_embed(f'⭐   {username} Rank   ⭐', rank_text, 0x4169E1))
 	except Exception as e:
 		print(e)
@@ -97,12 +97,12 @@ async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month
 			if rank_type == 'all':
 				usage_text = service.get_all_pokemon_usage(usage_type, RankType.ALL_TIME, None, limit, format)
 			else:
-				usage_text = service.get_all_pokemon_usage(usage_type, RankType.MONTH, datetime.datetime.utcnow(), limit, format)
+				usage_text = service.get_all_pokemon_usage(usage_type, RankType.MONTH, datetime.datetime.now(datetime.UTC), limit, format)
 		else:
 			if rank_type == 'all':
 				usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.ALL_TIME, None, limit, format)
 			else:
-				usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.MONTH, datetime.datetime.utcnow(), limit, format)
+				usage_text = service.get_pokemon_usage(username.lower(), usage_type, RankType.MONTH, datetime.datetime.now(datetime.UTC), limit, format)
 		embed = generate_embed(f'🐉   {"All Time" if username == "all" else username} Pokemon Usage   🐉', usage_text, 0x1DB954)
 		embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
 		await ctx.channel.send(embed=embed)
@@ -117,7 +117,7 @@ async def pokemon_usage_one(ctx, pokemon, usage_type='most', rank_type='month', 
 		if rank_type == 'all':
 			usage_text = service.get_pokemon_usage_one(pokemon, usage_type, RankType.ALL_TIME, None, format)
 		else:
-			usage_text = service.get_pokemon_usage_one(pokemon, usage_type, RankType.MONTH, datetime.datetime.utcnow(), format)
+			usage_text = service.get_pokemon_usage_one(pokemon, usage_type, RankType.MONTH, datetime.datetime.now(datetime.UTC), format)
 		embed = generate_embed(f'🐲   {pokemon} Usage   🐲', usage_text, 0xFFD700)
 		if '**' in usage_text:
 			embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
@@ -148,8 +148,28 @@ async def rival(ctx, username, rival_type='most', rank_type='month', limit=5, fo
 		if rank_type == 'all':
 			rival_text = service.get_rival(username.lower(), rival_type, RankType.ALL_TIME, None, limit, format)
 		else:
-			rival_text = service.get_rival(username.lower(), rival_type, RankType.MONTH, datetime.datetime.utcnow(), limit, format)
+			rival_text = service.get_rival(username.lower(), rival_type, RankType.MONTH, datetime.datetime.now(datetime.UTC), limit, format)
 		await ctx.channel.send(embed=generate_embed(f'😈   {username} Rival   😈', rival_text, 0xA020F0))
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
+@bot.command(name='num_matches', help='Use this command to get the number of matches between dates')
+async def num_matches(ctx, date_1=None, date_2=None):
+	try:
+		if date_1 is None:
+			start_1 = datetime.datetime.now(datetime.UTC)
+		else:
+			start_1 = datetime.datetime.strptime(date_1, '%d/%m/%y')
+		date_1 = datetime.datetime(year=start_1.year, month=start_1.month, day=start_1.day, tzinfo=datetime.timezone.utc)
+		if date_2 is None:
+			start_2 = datetime.datetime.now(datetime.UTC)
+		else:
+			start_2 = datetime.datetime.strptime(date_2, '%d/%m/%y')
+		date_2 = datetime.datetime(year=start_2.year, month=start_2.month, day=start_2.day, hour=23, minute=59, second=59, tzinfo=datetime.timezone.utc)
+		num_text = service.get_num_matches_between(date_1, date_2)
+		await ctx.channel.send(embed=generate_embed(f':hash:   Number of Matches ({date_1.date()} - {date_2.date()})   :hash:', f'{num_text} matches played', 0xADD8E6))
 	except Exception as e:
 		print(e)
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
@@ -294,7 +314,7 @@ def get_channel_by_name(channel):
 async def update_usage_stats():
 	guild, usage_channel = get_channel_by_name(POKEMON_USAGE_CHANNEL)
 	messages = [message async for message in usage_channel.history(limit=1, oldest_first=False)]
-	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.utcnow(), 20, 'gen9customgame')
+	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.now(datetime.UTC), 20, 'gen9customgame')
 	embed = generate_embed(f'🐉   Monthly Pokemon Usage   🐉', usage_text, 0x1DB954)
 	embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
 	try:
@@ -305,9 +325,9 @@ async def update_usage_stats():
 async def update_ladder_stats():
 	guild, usage_channel = get_channel_by_name(LADDER_CHANNEL)
 	messages = [message async for message in usage_channel.history(limit=1, oldest_first=False)]
-	rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.utcnow(), False, 20, 'gen9customgame')
+	rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(datetime.UTC), False, 20, 'gen9customgame')
 	if len(rank_text.split('\n')) < 20:
-		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.utcnow(), True, 20, 'gen9customgame')
+		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(datetime.UTC), True, 20, 'gen9customgame')
 	embed = generate_embed('👑   Monthly Rankings   👑', rank_text, 0x8B0000)
 	try:
 		await messages[0].edit(embed=embed)
