@@ -52,8 +52,8 @@ async def on_message(message):
 			await message.channel.send(embed=BOT_WARNING_EMBED)
 	await bot.process_commands(message)
 
-@bot.command(name='ranking', help='Use this command to get rankings')
-async def ranking(ctx, rank_type='month', unranked='ranked', limit=20, format='gen9customgame'):
+@bot.command(name='ranking', help='Use this command to get rankings. Ensure that all parameters are entered in the correct order!')
+async def ranking(ctx, rank_type=commands.parameter(default='month', description='This parameter dictates whether the returned rankings are based on the current month or all time. Takes either "month" or "all" as a value.'), unranked=commands.parameter(default='ranked', description='This parameter dictates whether the returned rankings are based on ranked players (15 games or more) or all players. Takes either "ranked" or "unranked" as a value.'), limit=commands.parameter(default=20, description='This parameter dictates how many players will be returned in the rankings. Takes any integer as a value.'), format=commands.parameter(default='gen9nationaldexag', description='This parameter dictates which format the rankings are based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).')):
 	try:
 		if service.ladder_enabled:
 			if rank_type == 'all':
@@ -66,8 +66,8 @@ async def ranking(ctx, rank_type='month', unranked='ranked', limit=20, format='g
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='past_ranking', help='Use this command to get past rankings')
-async def past_ranking(ctx, month='01', year='1970', unranked='ranked', limit=20, format='gen9customgame'):
+@bot.command(name='past_ranking', help='Use this command to get past rankings. Ensure that all parameters are entered in the correct order!')
+async def past_ranking(ctx, month=commands.parameter(default='01', description='This parameter dictates which month the past rankings are based on. Takes a two digit number as a value (e.g. "01", "02", "12", etc).'), year=commands.parameter(default='2023', description='This parameter dictates which year the past rankings are based on. Takes a four digit number as a value (e.g. "2023", "2024", etc).'), unranked=commands.parameter(default='ranked', description='This parameter dictates whether the returned rankings are based on ranked players (15 games or more) or all players. Takes either "ranked" or "unranked" as a value.'), limit=commands.parameter(default=20, description='This parameter dictates how many players will be returned in the rankings. Takes any integer as a value.'), format=commands.parameter(default='gen9nationaldexag', description='This parameter dictates which format the rankings are based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).')):
 	try:
 		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime(year=int(year), month=int(month), day=1, tzinfo=datetime.timezone.utc), unranked == 'unranked', limit, format)
 		await ctx.channel.send(embed=generate_embed(f'⌛   Past Rankings ({month}/{year})   ⌛', rank_text, 0xCD7F32))
@@ -76,8 +76,8 @@ async def past_ranking(ctx, month='01', year='1970', unranked='ranked', limit=20
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='show_rank', help='Use this command to get past rankings')
-async def show_rank(ctx, username, rank_type='month', format='gen9customgame'):
+@bot.command(name='show_rank', help='Use this command to get past rankings. Ensure that all parameters are entered in the correct order!')
+async def show_rank(ctx, username=commands.parameter(default=None, description='This parameter dictates which user to show the rank for. Takes any showdown username as a value.'), rank_type=commands.parameter(default='month', description='This parameter dictates whether the returned rankings are based on the current month or all time. Takes either "month" or "all" as a value.'), format=commands.parameter(default='gen9nationaldexag', description='This parameter dictates which format the rankings are based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).')):
 	try:
 		if service.ladder_enabled:
 			if rank_type == 'all':
@@ -90,8 +90,8 @@ async def show_rank(ctx, username, rank_type='month', format='gen9customgame'):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='pokemon_usage', help='Use this command to get pokemon usage')
-async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month', limit=5, format='gen9customgame'):
+@bot.command(name='pokemon_usage', help='Use this command to get pokemon usage. Ensure that all parameters are entered in the correct order!')
+async def pokemon_usage(ctx, username=commands.parameter(default='all', description='This parameter dictates which user to show pokemon usage for, or for all users. Takes any showdown username or "all" as a value.'), usage_type=commands.parameter(default='most', description='This parameter dictates which teams from the set of replays that should be taken into account; all teams, winning teams, or losing teams. Takes either "most", "win", or "lose" as a value.'), rank_type=commands.parameter(default='month', description='This parameter dictates whether the returned pokemon usages are based on the current month or all time. Takes either "month" or "all" as a value.'), limit=commands.parameter(default=5, description='This parameter dictates how many pokemon will be returned in the usage list. Takes any integer as a value.'), format=commands.parameter(default='gen9nationaldexag', description='This parameter dictates which format the pokemon usages are based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).')):
 	try:
 		if username == 'all':
 			if rank_type == 'all':
@@ -111,8 +111,8 @@ async def pokemon_usage(ctx, username='all', usage_type='most', rank_type='month
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='pokemon_usage_one', help='Use this command to get pokemon usage for a single pokemon')
-async def pokemon_usage_one(ctx, pokemon, usage_type='most', rank_type='month', format='gen9customgame'):
+@bot.command(name='pokemon_usage_one', help='Use this command to get pokemon usage for a single pokemon. Ensure that all parameters are entered in the correct order!')
+async def pokemon_usage_one(ctx, pokemon=commands.parameter(default=None, description='This parameter dictates which pokemon should be returned. Takes a pokemon name as a value.'), usage_type=commands.parameter(default='most', description='This parameter dictates which teams from the set of replays that should be taken into account; all teams, winning teams, or losing teams. Takes either "most", "win", or "lose" as a value.'), rank_type=commands.parameter(default='month', description='This parameter dictates whether the returned pokemon usage is based on the current month or all time. Takes either "month" or "all" as a value.'), format=commands.parameter(default='gen9nationaldexag', description='This parameter dictates which format the pokemon usage is based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).')):
 	try:
 		if rank_type == 'all':
 			usage_text = service.get_pokemon_usage_one(pokemon, usage_type, RankType.ALL_TIME, None, format)
@@ -127,8 +127,8 @@ async def pokemon_usage_one(ctx, pokemon, usage_type='most', rank_type='month', 
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='past_pokemon_usage', help='Use this command to get past pokemon usage')
-async def past_pokemon_usage(ctx, username='all', usage_type='most', month='01', year='1970', limit=5, format='gen9customgame'):
+@bot.command(name='past_pokemon_usage', help='Use this command to get past pokemon usage. Ensure that all parameters are entered in the correct order!')
+async def past_pokemon_usage(ctx, username=commands.parameter(default='all', description='This parameter dictates which user to show pokemon usage for, or for all users. Takes any showdown username or "all" as a value.'), usage_type=commands.parameter(default='most', description='This parameter dictates which teams from the set of replays that should be taken into account; all teams, winning teams, or losing teams. Takes either "most", "win", or "lose" as a value.'), month=commands.parameter(default='01', description='This parameter dictates which month the past usages are based on. Takes a two digit number as a value (e.g. "01", "02", "12", etc).'), year=commands.parameter(default='2023', description='This parameter dictates which year the past usages are based on. Takes a four digit number as a value (e.g. "2023", "2024", etc).'), limit=commands.parameter(default=5, description='This parameter dictates how many pokemon will be returned in the usage list. Takes any integer as a value.'), format=commands.parameter(default='gen9nationaldexag', description='This parameter dictates which format the pokemon usages are based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).')):
 	try:
 		if username == 'all':
 			usage_text = service.get_all_pokemon_usage(usage_type, RankType.MONTH, datetime.datetime(year=int(year), month=int(month), day=1, tzinfo=datetime.timezone.utc), limit, format)
@@ -142,8 +142,8 @@ async def past_pokemon_usage(ctx, username='all', usage_type='most', month='01',
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='rival', help='Use this command to get rival')
-async def rival(ctx, username, rival_type='most', rank_type='month', limit=5, format='gen9customgame'):
+@bot.command(name='rival', help='Use this command to get rival. Ensure that all parameters are entered in the correct order!')
+async def rival(ctx, username=commands.parameter(default=None, description='This parameter dictates which user to show rivals for. Takes any showdown username as a value.'), rival_type=commands.parameter(default='most', description='This parameter dictates which teams from the set of replays that should be taken into account; all teams, winning teams, or losing teams. Takes either "most", "win", or "lose" as a value.'), rank_type=commands.parameter(default='month', description='This parameter dictates whether the returned rival is based on the current month or all time. Takes either "month" or "all" as a value.'), limit=commands.parameter(default=5, description='This parameter dictates how many rivals will be returned in the usage list. Takes any integer as a value.'), format=commands.parameter(default='gen9nationaldexag', description='This parameter dictates which format the rivals are based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).')):
 	try:
 		if rank_type == 'all':
 			rival_text = service.get_rival(username.lower(), rival_type, RankType.ALL_TIME, None, limit, format)
@@ -155,8 +155,8 @@ async def rival(ctx, username, rival_type='most', rank_type='month', limit=5, fo
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='num_matches', help='Use this command to get the number of matches between dates')
-async def num_matches(ctx, date_1=None, date_2=None):
+@bot.command(name='num_matches', help='Use this command to get the number of matches between dates. Ensure that all parameters are entered in the correct order!')
+async def num_matches(ctx, date_1=commands.parameter(default=None, description='This parameter dictates the start date to begin counting matches. Takes a date as a value (e.g. "02/06/24"). Defaults to start of current day.'), date_2=commands.parameter(default=None, description='This parameter dictates the end date to stop counting matches. Takes a date as a value (e.g. "02/06/24"). Defaults to end of current day.')):
 	try:
 		if date_1 is None:
 			start_1 = datetime.datetime.now(datetime.UTC)
@@ -175,7 +175,7 @@ async def num_matches(ctx, date_1=None, date_2=None):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='toggle_ladder', help='Use this command to toggle ladder')
+@bot.command(name='toggle_ladder', help='Use this command to toggle ladder. Ensure that all parameters are entered in the correct order!')
 async def toggle_ladder(ctx):
 	try:
 		if ctx.author.display_name == DEV_USER:
@@ -188,7 +188,7 @@ async def toggle_ladder(ctx):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='update_pokemon_usage', help='Use this command to update the pokemon usage')
+@bot.command(name='update_pokemon_usage', help='Use this command to update the pokemon usage. Ensure that all parameters are entered in the correct order!')
 async def update_pokemon_usage(ctx):
 	try:
 		if ctx.author.display_name == DEV_USER:
@@ -200,7 +200,7 @@ async def update_pokemon_usage(ctx):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='update_ladder', help='Use this command to update the ladder')
+@bot.command(name='update_ladder', help='Use this command to update the ladder. Ensure that all parameters are entered in the correct order!')
 async def update_ladder(ctx):
 	try:
 		if ctx.author.display_name == DEV_USER:
@@ -212,7 +212,7 @@ async def update_ladder(ctx):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='scan_all_replays', help='Use this command to scan all replays')
+@bot.command(name='scan_all_replays', help='Use this command to scan all replays. Ensure that all parameters are entered in the correct order!')
 async def scan_all_replays(ctx, day=None, month=None, year=None):
 	try:
 		if ctx.author.display_name == DEV_USER:
@@ -227,7 +227,7 @@ async def scan_all_replays(ctx, day=None, month=None, year=None):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='scan_thread', help='Use this command to scan a specific thread')
+@bot.command(name='scan_thread', help='Use this command to scan a specific thread. Ensure that all parameters are entered in the correct order!')
 async def scan_thread(ctx, thread, channel=MATCH_CHANNEL):
 	try:
 		if ctx.author.display_name == DEV_USER:
@@ -243,7 +243,7 @@ async def scan_thread(ctx, thread, channel=MATCH_CHANNEL):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='ping', help='Use this command to ping a specific role')
+@bot.command(name='ping', help='Use this command to ping a specific role. Ensure that all parameters are entered in the correct order!')
 async def ping(ctx, role, message):
 	try:
 		if role.lower() != 'here' and role.lower() != 'everyone':
@@ -256,7 +256,7 @@ async def ping(ctx, role, message):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='glad', help='Use this command to ping a the 35 Gladiator role')
+@bot.command(name='glad', help='Use this command to ping a the 35 Gladiator role. Ensure that all parameters are entered in the correct order!')
 async def ping_gladiator(ctx, message=None):
 	try:
 		discord_role = discord.utils.get(ctx.guild.roles, name='35 Gladiator')
@@ -266,7 +266,7 @@ async def ping_gladiator(ctx, message=None):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='spec', help='Use this command to ping a the 35 Spectator role')
+@bot.command(name='spec', help='Use this command to ping a the 35 Spectator role. Ensure that all parameters are entered in the correct order!')
 async def ping_spectator(ctx, message=None):
 	try:
 		discord_role = discord.utils.get(ctx.guild.roles, name='35 Spectator')
@@ -276,7 +276,7 @@ async def ping_spectator(ctx, message=None):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='doub', help='Use this command to ping a the 35 Double role')
+@bot.command(name='doub', help='Use this command to ping a the 35 Double role. Ensure that all parameters are entered in the correct order!')
 async def ping_double(ctx, message=None):
 	try:
 		discord_role = discord.utils.get(ctx.guild.roles, name='35 Double')
@@ -286,7 +286,7 @@ async def ping_double(ctx, message=None):
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
-@bot.command(name='baby', help='Use this command to ping a the 35 Baby role')
+@bot.command(name='baby', help='Use this command to ping a the 35 Baby role. Ensure that all parameters are entered in the correct order!')
 async def ping_baby(ctx, message=None):
 	try:
 		discord_role = discord.utils.get(ctx.guild.roles, name='35 Baby')
@@ -314,7 +314,7 @@ def get_channel_by_name(channel):
 async def update_usage_stats():
 	guild, usage_channel = get_channel_by_name(POKEMON_USAGE_CHANNEL)
 	messages = [message async for message in usage_channel.history(limit=1, oldest_first=False)]
-	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.now(datetime.UTC), 20, 'gen9customgame')
+	usage_text = service.get_all_pokemon_usage('most', RankType.MONTH, datetime.datetime.now(datetime.UTC), 20, 'gen9nationaldexag')
 	embed = generate_embed(f'🐉   Monthly Pokemon Usage   🐉', usage_text, 0x1DB954)
 	embed.set_image(url=f'https://play.pokemonshowdown.com/sprites/ani/{usage_text.split("**")[1].split("**")[0].lower().replace(".", "").replace(" ", "")}.gif')
 	try:
@@ -325,9 +325,9 @@ async def update_usage_stats():
 async def update_ladder_stats():
 	guild, usage_channel = get_channel_by_name(LADDER_CHANNEL)
 	messages = [message async for message in usage_channel.history(limit=1, oldest_first=False)]
-	rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(datetime.UTC), False, 20, 'gen9customgame')
+	rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(datetime.UTC), False, 20, 'gen9nationaldexag')
 	if len(rank_text.split('\n')) < 20:
-		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(datetime.UTC), True, 20, 'gen9customgame')
+		rank_text = service.generate_rank_text(RankType.MONTH, datetime.datetime.now(datetime.UTC), True, 20, 'gen9nationaldexag')
 	embed = generate_embed('👑   Monthly Rankings   👑', rank_text, 0x8B0000)
 	try:
 		await messages[0].edit(embed=embed)

@@ -20,7 +20,7 @@
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
     - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
     - `limit`: Takes any integer value, defaults to `20`
-    - `format`: Takes a string value, defaults to `gen9customgame`
+    - `format`: Takes a string value, defaults to `gen9nationaldexag`
   - Return:
     - List of elo and ranking for all users
       - If `month`, shows only elo/rank based on current month. If `all`, shows all time elo/rank
@@ -31,7 +31,7 @@
     - `year`: Takes any four digit integer, defaults to `1970`
     - `unranked`: Takes values of `unranked` or `ranked`, defaults to `unranked`
     - `limit`: Takes any integer value, defaults to `20`
-    - `format`: Takes a string value, defaults to `gen9customgame`
+    - `format`: Takes a string value, defaults to `gen9nationaldexag`
   - Return:
     - List of elo and ranking for all users from a previous month/year
       - If `unranked`, includes unranked users in ranking. If `ranked`, only shows ranked users
@@ -39,7 +39,7 @@
   - Parameters:
     - `username`: Takes any showdown username
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
-    - `format`: Takes a string value, defaults to `gen9customgame`
+    - `format`: Takes a string value, defaults to `gen9nationaldexag`
   - Return:
     - Elo of user
       - If `all`, shows all time elo. If `month`, shows current month elo
@@ -49,7 +49,7 @@
     - `usage_type`: Takes values of `most`, `win`, or `lose`, defaults to `most`
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
     - `limit`: Takes any integer value, defaults to `20`
-    - `format`: Takes a string value, defaults to `gen9customgame`
+    - `format`: Takes a string value, defaults to `gen9nationaldexag`
   - Return:
     - Most common pokemon used
       - If `all`, shows most common pokemon across all users. If specific username, shows most common pokemon for that user
@@ -60,7 +60,7 @@
     - `pokemon`: Takes any pokemon name, no default
     - `usage_type`: Takes values of `most`, `win`, or `lose`, defaults to `most`
     - `rank_type`: Takes values of `month` or `all`, defaults to `month`
-    - `format`: Takes a string value, defaults to `gen9customgame`
+    - `format`: Takes a string value, defaults to `gen9nationaldexag`
   - Return:
     - Pokemon usage for one pokemon
       - If `most`, shows pokemon usage in all matches. If `win`, shows pokemon usage in winning matches. If `lose`, shows pokemon usage in losing matches.
@@ -72,7 +72,7 @@
     - `month`: Takes any two digit integer, defaults to `01`
     - `year`: Takes any four digit integer, defaults to `1970`
     - `limit`: Takes any integer value, defaults to `20`
-    - `format`: Takes a string value, defaults to `gen9customgame`
+    - `format`: Takes a string value, defaults to `gen9nationaldexag`
   - Return:
     - Most common pokemon used from past meta
       - If `all`, shows most common pokemon across all users. If specific username, shows most common pokemon for that user
