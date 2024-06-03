@@ -24,8 +24,10 @@ class Service:
 	def get_p2p_history(self, username_1, username_2, date):
 		user_response = session.execute(select(User).where(or_(User.username == username_1.strip().lower(), User.username == username_2.strip().lower())))
 		user_ids = []
+		user_name_map = {}
 		for user in user_response.scalars():
 			user_ids.append(user.id)
+			user_name_map[user.id] = user.username
 		match_response = session.execute(select(Match).order_by(Match.date.desc()))
 		match_map = {}
 		for match in match_response.scalars():
@@ -39,7 +41,7 @@ class Service:
 		for key, value in match_map.items():
 			history_text += f'**{key}**\n'
 			for m in value:
-				history_text += f'https://replay.pokemonshowdown.com/{m.replay_id}\n'
+				history_text += f'https://replay.pokemonshowdown.com/{m.replay_id} - Winner: **{user_name_map[m.winner_id]}**\n'
 			history_text += '\n'
 		return history_text
 
