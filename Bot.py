@@ -175,6 +175,21 @@ async def num_matches(ctx, date_1=commands.parameter(default=None, description='
 		await ctx.channel.send(embed=BOT_WARNING_EMBED)
 	return
 
+@bot.command(name='p2p_history', help='Use this command to get the number of matches between dates. Ensure that all parameters are entered in the correct order!')
+async def p2p_history(ctx, username_1=commands.parameter(default=None, description='This parameter dictates which user should be selected. Takes any showdown username as a value.'), username_2=commands.parameter(default=None, description='This parameter dictates which other user should be selected. Takes any showdown username as a value.'), date=commands.parameter(default=None, description='This parameter dictates the start date to begin looking at matches. Takes a date as a value (e.g. "02/06/24"). Defaults to start of current day.')):
+	try:
+		if date is None:
+			start = datetime.datetime.now(datetime.UTC)
+		else:
+			start = datetime.datetime.strptime(date, '%d/%m/%y')
+		date = datetime.datetime(year=start.year, month=start.month, day=start.day, tzinfo=datetime.timezone.utc)
+		history_text = service.get_p2p_history(username_1.lower(), username_2.lower(), date)
+		await ctx.channel.send(embed=generate_embed(f':dart:   Player-To-Player History ({username_1} vs. {username_2} - {date.date()})   :dart:', history_text, 0xADD8E6))
+	except Exception as e:
+		print(e)
+		await ctx.channel.send(embed=BOT_WARNING_EMBED)
+	return
+
 @bot.command(name='toggle_ladder', help='Use this command to toggle ladder. Ensure that all parameters are entered in the correct order!')
 async def toggle_ladder(ctx):
 	try:

@@ -2,7 +2,7 @@ from urllib.request import Request, urlopen
 import json
 import datetime
 from Database import User, Match, Rank, RankType, session
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 class Service:
 	def __init__(self):
@@ -20,6 +20,28 @@ class Service:
 		for match in response.scalars():
 			return match.date
 		return None
+
+	def get_p2p_history(self, username_1, username_2, date):
+		user_response = session.execute(select(User).where(or_(User.username == username_1.strip().lower(), User.username == username_2.strip().lower())))
+		user_ids = []
+		for user in user_response.scalars():
+			user_ids.append(user.id)
+		match_response = session.execute(select(Match).order_by(Match.date.desc()))
+		match_map = {}
+		for match in match_response.scalars():
+			match_date_time = datetime.datetime(year=match.date.year, month=match.date.month, day=match.date.day, tzinfo=datetime.timezone.utc)
+			if match.winner_id in user_ids and match.loser_id in user_ids and match_date_time > date:
+				match_date = f'{match.date.month}/{match.date.year}'
+				if match_date not in match_map:
+					match_map[match_date] = []
+				match_map[match_date].append(match)
+		history_text = ''
+		for key, value in match_map.items():
+			history_text += f'**{key}**\n'
+			for m in value:
+				history_text += f'https://replay.pokemonshowdown.com/{m.replay_id}\n'
+			history_text += '\n'
+		return history_text
 
 	def get_num_matches_between(self, date_1, date_2):
 		query = session.query(Match).filter(Match.date.between(date_1, date_2))
