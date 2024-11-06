@@ -2,7 +2,7 @@ from urllib.request import Request, urlopen
 import json
 import datetime
 from Database import User, Match, Rank, RankType, session
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, delete
 
 class Service:
 	def __init__(self):
@@ -58,11 +58,11 @@ class Service:
 		for user in response.scalars():
 			if user.username == username:
 				if rank_type == RankType.MONTH:
-					won_matches = [x for x in user.won_matches if x.format == format and x.date.month == date.month and x.date.year == date.year]
-					lost_matches = [x for x in user.lost_matches if x.format == format and x.date.month == date.month and x.date.year == date.year]
+					won_matches = [x for x in user.won_matches if self.__compare_format(x.format, format) and x.date.month == date.month and x.date.year == date.year]
+					lost_matches = [x for x in user.lost_matches if self.__compare_format(x.format, format) and x.date.month == date.month and x.date.year == date.year]
 				else:
-					won_matches = [x for x in user.won_matches if x.format == format]
-					lost_matches = [x for x in user.lost_matches if x.format == format]
+					won_matches = [x for x in user.won_matches if self.__compare_format(x.format, format)]
+					lost_matches = [x for x in user.lost_matches if self.__compare_format(x.format, format)]
 				if rival_type == 'most':
 					users = []
 					for match in won_matches:
@@ -112,11 +112,11 @@ class Service:
 		for user in response.scalars():
 			if user.username == username:
 				if rank_type == RankType.MONTH:
-					won_matches = [x for x in user.won_matches if x.format == format and x.date.month == date.month and x.date.year == date.year]
-					lost_matches = [x for x in user.lost_matches if x.format == format and x.date.month == date.month and x.date.year == date.year]
+					won_matches = [x for x in user.won_matches if self.__compare_format(x.format, format) and x.date.month == date.month and x.date.year == date.year]
+					lost_matches = [x for x in user.lost_matches if self.__compare_format(x.format, format) and x.date.month == date.month and x.date.year == date.year]
 				else:
-					won_matches = [x for x in user.won_matches if x.format == format]
-					lost_matches = [x for x in user.lost_matches if x.format == format]
+					won_matches = [x for x in user.won_matches if self.__compare_format(x.format, format)]
+					lost_matches = [x for x in user.lost_matches if self.__compare_format(x.format, format)]
 				if usage_type == 'most':
 					pokemon = []
 					for match in won_matches:
@@ -146,11 +146,11 @@ class Service:
 			all_lost_matches.extend(user.lost_matches)
 
 		if rank_type == RankType.MONTH:
-			won_matches = [x for x in all_won_matches if x.format == format and x.date.month == date.month and x.date.year == date.year]
-			lost_matches = [x for x in all_lost_matches if x.format == format and x.date.month == date.month and x.date.year == date.year]
+			won_matches = [x for x in all_won_matches if self.__compare_format(x.format, format) and x.date.month == date.month and x.date.year == date.year]
+			lost_matches = [x for x in all_lost_matches if self.__compare_format(x.format, format) and x.date.month == date.month and x.date.year == date.year]
 		else:
-			won_matches = [x for x in all_won_matches if x.format == format]
-			lost_matches = [x for x in all_lost_matches if x.format == format]
+			won_matches = [x for x in all_won_matches if self.__compare_format(x.format, format)]
+			lost_matches = [x for x in all_lost_matches if self.__compare_format(x.format, format)]
 		if usage_type == 'most':
 			pokemon = []
 			for match in won_matches:
@@ -229,6 +229,30 @@ class Service:
 				break
 		return output_text
 
+	def override_rank(self, username, rank_type, format, date, value):
+		user_id = None
+		response = session.execute(select(User).where(User.username == username))
+		for user in response.scalars():
+			if user.username == username:
+				user_id = user.id
+		user_rank = None
+		if rank_type == RankType.MONTH:
+			response = session.execute(select(Rank).where(Rank.user_id == user_id).where(Rank.rank_type == RankType.MONTH).where(Rank.format == format).where(Rank.month == date.month).where(Rank.year == date.year))
+			for rank in response.scalars():
+				if rank.user_id == user_id and rank.rank_type == RankType.MONTH and rank.format == format and rank.month == date.month and rank.year == date.year:
+					user_rank = rank
+		else:
+			response = session.execute(select(Rank).where(Rank.user_id == user_id).where(Rank.rank_type == RankType.ALL_TIME).where(Rank.format == format))
+			for rank in response.scalars():
+				if rank.user_id == user_id and rank.rank_type == RankType.MONTH and rank.format == format:
+					user_rank = rank
+		user_rank.value = max(value, self.__elo_floor)
+		session.commit()
+
+	def remove_match(self, replay_id):
+		session.execute(delete(Match).where(Match.replay_id == replay_id))
+		session.commit()
+
 	def process_match(self, link):
 		link = link + '.json'
 		try:
@@ -279,23 +303,21 @@ class Service:
 		for user in response.scalars():
 			if user.username == username:
 				return user
-		else:
-			user = User(username)
-			session.add(user)
-			session.commit()
-			return user
+		user = User(username)
+		session.add(user)
+		session.commit()
+		return user
 
 	def __create_match(self, replay_id, format, date, winner, winning_roster, loser, losing_roster):
 		response = session.execute(select(Match).where(Match.replay_id == replay_id))
 		for match in response.scalars():
 			if match.replay_id == replay_id:
 				return None
-		else:
-			match = Match(replay_id, format, date, winner.id, winning_roster, loser.id, losing_roster)
-			session.add(match)
-			session.commit()
-			self.__create_rank(winner, loser, date, format)
-			return match
+		match = Match(replay_id, format, date, winner.id, winning_roster, loser.id, losing_roster)
+		session.add(match)
+		session.commit()
+		self.__create_rank(winner, loser, date, format)
+		return match
 
 	def __create_rank(self, winner, loser, date, format):
 		winner_monthly_rank = self.__create_monthly_rank(winner.id, date, format)
@@ -310,22 +332,20 @@ class Service:
 		for rank in response.scalars():
 			if rank.user_id == user_id and rank.rank_type == RankType.MONTH and rank.format == format and rank.month == date.month and rank.year == date.year:
 				return rank
-		else:
-			rank = Rank(user_id, self.__elo_start, RankType.MONTH, format, date.month, date.year)
-			session.add(rank)
-			session.commit()
-			return rank
+		rank = Rank(user_id, self.__elo_start, RankType.MONTH, format, date.month, date.year)
+		session.add(rank)
+		session.commit()
+		return rank
 
 	def __create_all_time_rank(self, user_id, format):
 		response = session.execute(select(Rank).where(Rank.user_id == user_id).where(Rank.rank_type == RankType.ALL_TIME).where(Rank.format == format))
 		for rank in response.scalars():
 			if rank.user_id == user_id and rank.rank_type == RankType.ALL_TIME and rank.format == format:
 				return rank
-		else:
-			rank = Rank(user_id, self.__elo_start, RankType.ALL_TIME, format, None, None)
-			session.add(rank)
-			session.commit()
-			return rank
+		rank = Rank(user_id, self.__elo_start, RankType.ALL_TIME, format, None, None)
+		session.add(rank)
+		session.commit()
+		return rank
 
 	def __update_rank(self, rank_type, winner, winner_rank, loser, loser_rank):
 		winner_prob = 1 / (1 + (pow(10, ((loser_rank.value - winner_rank.value) / self.__rating))))
@@ -340,3 +360,6 @@ class Service:
 		session.commit()
 		self.latest_rank_update_text[rank_type] = f'**{winner.username}**: {round(original_winner_rank_value)} --> {round(winner_rank.value)}\n' \
 		                                f'**{loser.username}**: {round(original_loser_rank_value)} --> {round(loser_rank.value)}'
+
+	def __compare_format(self, internal_format, inputted_format):
+		return True if inputted_format == 'all' else internal_format == inputted_format
