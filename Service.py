@@ -6,7 +6,7 @@ from sqlalchemy import select, or_, delete
 
 class Service:
 	def __init__(self):
-		self.__elo_floor = 100
+		self.__elo_floor = 1000
 		self.__k_factor = 60
 		self.__rating = 1000
 		self.__elo_start = 1000
