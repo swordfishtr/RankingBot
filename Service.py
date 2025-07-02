@@ -4,6 +4,9 @@ import datetime
 from Database import User, Match, Rank, RankType, session
 from sqlalchemy import select, or_, delete
 
+DEFAULT_FORMAT = os.getenv('DEFAULT_FORMAT')
+DEFAULT_FORMAT_ALT = os.getenv('DEFAULT_FORMAT_ALT')
+
 class Service:
 	def __init__(self):
 		self.__elo_floor = 1000
@@ -269,7 +272,9 @@ class Service:
 			return
 		log = raw_data['log']
 		replay_id = raw_data['id']
-		format = raw_data['formatid']
+		# for database purposes, gen9nd35pokesjul2025 == gen9nationaldex35pokes
+		# so store the former as the latter
+		format = DEFAULT_FORMAT if raw_data['formatid'] == DEFAULT_FORMAT_ALT else raw_data['formatid']
 		date = datetime.datetime.utcfromtimestamp(raw_data['uploadtime'])
 
 		user_one = self.__create_user(log.split('|player|p1|')[1].split('|')[0].strip().lower())
