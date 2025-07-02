@@ -7,10 +7,10 @@ from sqlalchemy import select, or_, delete
 class Service:
 	def __init__(self):
 		self.__elo_floor = 1000
-		self.__k_factor = 60
+		self.__k_factor = 45
 		self.__rating = 1000
 		self.__elo_start = 1000
-		self.__ranked_threshold = 15
+		self.__ranked_threshold = 10
 
 		self.latest_rank_update_text = {}
 		self.ladder_enabled = True

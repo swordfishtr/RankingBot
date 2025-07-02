@@ -194,7 +194,7 @@ async def p2p_history(ctx, username_1=commands.parameter(default=None, descripti
 @bot.command(name='toggle_ladder', help='Use this command to toggle ladder. Ensure that all parameters are entered in the correct order!')
 async def toggle_ladder(ctx):
 	try:
-		if ctx.author.display_name == DEV_USER:
+		if ctx.author.name == DEV_USER:
 			service.ladder_enabled = not service.ladder_enabled
 			await ctx.channel.send(f'Clod\'s Ladder is now {"enabled" if service.ladder_enabled else "disabled"}.')
 		else:
@@ -207,7 +207,7 @@ async def toggle_ladder(ctx):
 @bot.command(name='update_pokemon_usage', help='Use this command to update the pokemon usage. Ensure that all parameters are entered in the correct order!')
 async def update_pokemon_usage(ctx):
 	try:
-		if ctx.author.display_name == DEV_USER:
+		if ctx.author.name == DEV_USER:
 			await update_usage_stats()
 		else:
 			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
@@ -219,7 +219,7 @@ async def update_pokemon_usage(ctx):
 @bot.command(name='update_ladder', help='Use this command to update the ladder. Ensure that all parameters are entered in the correct order!')
 async def update_ladder(ctx):
 	try:
-		if ctx.author.display_name == DEV_USER:
+		if ctx.author.name == DEV_USER:
 			await update_ladder_stats()
 		else:
 			await ctx.channel.send(embed=DEV_ONLY_WARNING_EMBED)
@@ -231,7 +231,7 @@ async def update_ladder(ctx):
 @bot.command(name='override_rank', help='Use this command to override rank. Ensure that all parameters are entered in the correct order!')
 async def override_rank(ctx, username=commands.parameter(default=None, description='This parameter dictates which user to show the rank for. Takes any showdown username as a value.'), rank_type=commands.parameter(default='month', description='This parameter dictates whether the returned rankings are based on the current month or all time. Takes either "month" or "all" as a value.'), format=commands.parameter(default=DEFAULT_FORMAT, description='This parameter dictates which format the rankings are based on. Takes any format as a value (e.g. "gen9nationaldexag", "gen9customgame", "gen9doublescustomgame", etc).'), value=commands.parameter(default=1000, description='This parameter dictates which value to override the rank with. Takes any value.')):
 	try:
-		if ctx.author.display_name == DEV_USER:
+		if ctx.author.name == DEV_USER:
 			if rank_type == 'all':
 				service.override_rank(username.lower(), RankType.ALL_TIME, format, None, value)
 			else:
@@ -247,7 +247,7 @@ async def override_rank(ctx, username=commands.parameter(default=None, descripti
 @bot.command(name='remove_replay', help='Use this command to remove a replay. Ensure that all parameters are entered in the correct order!')
 async def remove_replay(ctx, replay_id=commands.parameter(default=None, description='This parameter dictates which replay to remove. Takes any showdown replay id.')):
 	try:
-		if ctx.author.display_name == DEV_USER:
+		if ctx.author.name == DEV_USER:
 			service.remove_match(replay_id)
 			await ctx.channel.send(embed=generate_embed(f'🪬   Replay Removed   🪬', f'{replay_id} removed from database', 0x0096FF))
 		else:
@@ -260,7 +260,7 @@ async def remove_replay(ctx, replay_id=commands.parameter(default=None, descript
 @bot.command(name='scan_all_replays', help='Use this command to scan all replays. Ensure that all parameters are entered in the correct order!')
 async def scan_all_replays(ctx, day=None, month=None, year=None):
 	try:
-		if ctx.author.display_name == DEV_USER:
+		if ctx.author.name == DEV_USER:
 			if not month or not year:
 				await scan_replays()
 			else:
@@ -275,7 +275,7 @@ async def scan_all_replays(ctx, day=None, month=None, year=None):
 @bot.command(name='scan_thread', help='Use this command to scan a specific thread. Ensure that all parameters are entered in the correct order!')
 async def scan_thread(ctx, thread, channel=MATCH_CHANNEL):
 	try:
-		if ctx.author.display_name == DEV_USER:
+		if ctx.author.name == DEV_USER:
 			guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
 			match_channel = discord.utils.get(guild.text_channels, name=channel)
 			match_thread = discord.utils.get(match_channel.threads, name=thread)
