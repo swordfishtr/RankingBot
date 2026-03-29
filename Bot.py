@@ -15,8 +15,6 @@ DEFAULT_FORMAT = os.getenv('DEFAULT_FORMAT')
 POKEMON_USAGE_CHANNEL = os.getenv('POKEMON_USAGE_CHANNEL')
 LADDER_CHANNEL = os.getenv('LADDER_CHANNEL')
 DEV_USER = os.getenv('DEV_USER')
-MATCH_PREFIX_ALT = os.getenv('MATCH_PREFIX_ALT')
-DEFAULT_FORMAT_ALT = os.getenv('DEFAULT_FORMAT_ALT')
 
 intents = discord.Intents.all()
 intents.members = True
@@ -38,7 +36,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-	if message.channel.name == MATCH_CHANNEL and (MATCH_PREFIX in message.content or MATCH_PREFIX_ALT in message.content):
+	if message.channel.name == MATCH_CHANNEL and MATCH_PREFIX in message.content:
 		try:
 			links = get_links(message.content)
 			for link in links:
@@ -348,9 +346,6 @@ def get_links(message):
 	tokens = message.split(MATCH_PREFIX)[1:]
 	for token in tokens:
 		links.append(MATCH_PREFIX + token.split('\n')[0].split(' ')[0].split('>')[0].split('?')[0].strip())
-	tokens_alt = message.split(MATCH_PREFIX_ALT)[1:]
-	for token in tokens_alt:
-		links.append(MATCH_PREFIX_ALT + token.split('\n')[0].split(' ')[0].split('>')[0].split('?')[0].strip())
 	return links
 
 def generate_embed(title, content, color):
@@ -402,7 +397,7 @@ def scan_messages(messages, print_interval):
 	for idx, message in enumerate(messages):
 		if idx % print_interval == 0:
 			print(f'.....{idx} / {count} messages scanned.....')
-		if MATCH_PREFIX in message.content or MATCH_PREFIX_ALT in message.content:
+		if MATCH_PREFIX in message.content:
 			links = get_links(message.content)
 			for link in links:
 				response = service.process_match(link)
