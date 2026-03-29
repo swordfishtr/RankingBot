@@ -221,7 +221,7 @@ class Service:
 			wins = len(won_matches)
 			losses = len(lost_matches)
 			if total_games > 0:
-				winrate = wins / total_games
+				winrate = wins / total_games * 100
 			else:
 				winrate = 0
 			if (total_games >= self.__ranked_threshold):
